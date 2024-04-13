@@ -1,0 +1,30 @@
+@import 'primeicons/primeicons.css';
+
+.p-treenode-children {
+  .p-treenode-label {
+    width: 85%;
+  }
+}
+
+.p-fileupload {
+  .p-progressbar {
+    display: none;
+  }
+  > * {
+    border-width: 0;
+  }
+}
+
+.p-treenode-label {
+  width: 100%;
+}
+
+.custom-spinner {
+  .p-progress-spinner-circle {
+    stroke: var(--primary-color) !important;
+  }
+}
+
+.p-tooltip-text {
+  font-size: 0.85rem;
+}

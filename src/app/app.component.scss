@@ -1,0 +1,10 @@
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.custom-line {
+  width: 100%;
+  border-bottom: 1px solid var(--gray-300);
+  margin: 5px auto;
+}
