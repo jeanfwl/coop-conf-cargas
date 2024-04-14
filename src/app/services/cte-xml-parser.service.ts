@@ -27,7 +27,7 @@ export class CteXmlParserService {
       motorista: driverName,
       valorFrete: infCte.vPrest.vRec,
       valorIcms: infCte.imp.ICMS?.ICMS00?.vICMS ?? 0,
-      valorCarga: infCte.infCTeNorm?.infCarga.vCarga,
+      valorCarga: infCte.infCTeNorm?.infCarga.vCarga ?? 0,
       produto: infCte.infCTeNorm?.infCarga.proPred,
       notas: nfes,
       dataPagamento: dataPagamento,

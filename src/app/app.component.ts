@@ -10,7 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { TreeModule, TreeNodeDropEvent } from 'primeng/tree';
 import { MessageService, PrimeNGConfig, TreeDragDropService, TreeNode } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { Observable, delay, from, mergeMap, toArray } from 'rxjs';
+import { Observable, delay, from, mergeMap, tap, throwError, toArray } from 'rxjs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -111,19 +111,6 @@ export class AppComponent implements OnInit {
   onFilesSelected(event: FileSelectEvent): void {
     const files = Array.from(event.files).slice();
     event.files = [];
-
-    const currentFilesNode = this.filesNode.slice();
-    const newFilesNode = files.map((file, i) => {
-      return {
-        // key: `${currentFilesNode.length + i}`,
-        key: crypto.randomUUID(),
-        icon: 'pi pi-file',
-        label: file.name,
-        data: file,
-        droppable: false,
-      };
-    });
-
     this.isLoading = true;
 
     const files$: Observable<string[]> = from(files).pipe(
@@ -133,15 +120,16 @@ export class AppComponent implements OnInit {
     );
     files$.subscribe({
       next: (xmls) => {
-        // this.filesNode = currentFilesNode.concat(newFilesNode);
-
-        const ctes = xmls.map((content, i) => {
+        const ctes = xmls.map((content) => {
           const xmlContentParsedAsJSON: CteXml = new XMLParser(parsingOptions).parse(content);
-          console.log(i);
           return this.cteXmlService.extractCteXmlInfo(xmlContentParsedAsJSON);
         });
 
-        this.filesNode = ctes.map((cte) => {
+        const currentNodes = this.filesNode.slice().filter((f) => f.droppable === false);
+        const newCtes = ctes.filter(
+          (cte) => currentNodes.map((n) => n.data?.numero).includes(cte.numero) === false
+        );
+        const newNodes = newCtes.map((cte) => {
           return {
             key: String(crypto.randomUUID()),
             icon: 'pi pi-file',
@@ -150,6 +138,36 @@ export class AppComponent implements OnInit {
             droppable: false,
           };
         });
+
+        if (newNodes.length === 0) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail: 'Os arquivos selecionados já estão carregados na lista',
+            life: 3000,
+          });
+          return;
+        }
+
+        if (newNodes.length !== files.length) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Alerta',
+            detail: `${files.length - newNodes.length} arquivos foram ignorados, pois já estão na lista`,
+            life: 3000,
+          });
+        }
+
+        this.filesNode = currentNodes.concat(newNodes);
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Importação',
+          detail: 'Arquivos importados com sucesso',
+        });
+      },
+      error: (err) => {
+        console.log('erro 1');
       },
       complete: () => (this.isLoading = false),
     });
@@ -175,8 +193,9 @@ export class AppComponent implements OnInit {
     if (this.filesNode.some((n) => n.children?.length === 0)) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Erro na validação',
+        summary: 'Alerta',
         detail: 'Não pode existir cargas sem nenhum xml agrupado',
+        life: 2000,
       });
     }
 
