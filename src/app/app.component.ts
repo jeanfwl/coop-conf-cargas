@@ -14,7 +14,7 @@ import { Observable, delay, from, mergeMap, toArray } from 'rxjs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { Cte, CteXml } from './models/cte-information.type';
+import { Carga, Cte, CteXml } from './models/cte-information.type';
 import { X2jOptions, XMLParser } from 'fast-xml-parser';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -135,7 +135,6 @@ export class AppComponent implements OnInit {
       next: (xmls) => {
         // this.filesNode = currentFilesNode.concat(newFilesNode);
 
-        console.log(xmls);
         const ctes = xmls.map((content, i) => {
           const xmlContentParsedAsJSON: CteXml = new XMLParser(parsingOptions).parse(content);
           console.log(i);
@@ -157,9 +156,13 @@ export class AppComponent implements OnInit {
   }
 
   addNodeGroup(): void {
+    const dataPagamento = new Date();
+    dataPagamento.setDate(dataPagamento.getDate() + 6);
     this.filesNode.push({
       // key: `${this.filesNode.length}`,
-      data: undefined,
+      data: {
+        dataPagamento,
+      } as Carga,
       key: crypto.randomUUID(),
       label: 'Carga',
       icon: 'pi pi-truck',
@@ -178,13 +181,14 @@ export class AppComponent implements OnInit {
     }
 
     const cargas = this.filesNode.map((file) => {
-      let ctes: Cte[] = [];
       if (file.children?.length! > 0) {
-        ctes = <Cte[]>file.children?.map((c) => c.data).filter((c) => c !== undefined);
+        return {
+          ...file.data!,
+          ctes: <Cte[]>file.children?.map((c) => c.data).filter((c) => c !== undefined),
+        } as Carga;
       } else {
-        ctes = [file.data!];
+        return file.data!;
       }
-      return ctes;
     });
 
     this.cteXmlService.createCteExcel(cargas);

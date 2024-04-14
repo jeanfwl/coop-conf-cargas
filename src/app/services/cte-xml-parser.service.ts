@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Cte, CteXml, Nfe } from '../models/cte-information.type';
+import { Carga, Cte, CteXml, Nfe } from '../models/cte-information.type';
 import { ComplementObservation, Complements } from '../models/complements.type';
 import * as ExcelJS from 'exceljs';
 
@@ -14,7 +14,9 @@ export class CteXmlParserService {
 
     const emissionDate = new Date(infCte.ide.dhEmi);
     const [loadCode, driverName] = this.getCteObservationData(infCte.compl);
-    const nfes = this.getCteInvoices(infCte.infCTeNorm.infDoc.infNFe);
+    const nfes = this.getCteInvoices(infCte.infCTeNorm?.infDoc.infNFe ?? []);
+    const dataPagamento = new Date();
+    dataPagamento.setDate(dataPagamento.getDate() + 6);
 
     return {
       numero: infCte.ide.nCT,
@@ -25,9 +27,10 @@ export class CteXmlParserService {
       motorista: driverName,
       valorFrete: infCte.vPrest.vRec,
       valorIcms: infCte.imp.ICMS?.ICMS00?.vICMS ?? 0,
-      valorCarga: infCte.infCTeNorm.infCarga.vCarga,
-      produto: infCte.infCTeNorm.infCarga.proPred,
+      valorCarga: infCte.infCTeNorm?.infCarga.vCarga,
+      produto: infCte.infCTeNorm?.infCarga.proPred,
       notas: nfes,
+      dataPagamento: dataPagamento,
     };
   }
 
@@ -64,29 +67,57 @@ export class CteXmlParserService {
     return invoicesConverted.length === 1 ? +invoicesConverted[0] : invoicesConverted.join(', ');
   }
 
-  createCteExcel(cargas: Cte[][]): void {
+  createCteExcel(itens: (Cte | Carga)[]): void {
     let excelRow = 1;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('COOP');
-    console.log('LINHA INICIAL', excelRow);
 
-    cargas.forEach((ctes, index) => {
-      const ctesCarga = ctes.length;
+    itens.forEach((item, index) => {
+      let ctesCarga = 1;
+      let totalFrete = 0,
+        totalIcms = 0,
+        totalCarga = 0;
+
+      let dataPagamento, contrato, cheque, motorista;
+
+      let ctes: Cte[];
+      if (this.isCarga(item)) {
+        const carga = <Carga>item;
+        ctes = carga.ctes.slice();
+        ctesCarga = carga.ctes.length;
+
+        [dataPagamento, contrato, cheque, motorista] = [
+          carga.dataPagamento,
+          carga.contrato,
+          carga.cheque,
+          carga.motorista,
+        ];
+        [totalFrete, totalIcms, totalCarga] = carga.ctes.reduce(
+          (totais, cte) => {
+            totais[0] += cte.valorFrete;
+            totais[1] += cte.valorIcms;
+            totais[2] += cte.valorCarga;
+            return totais;
+          },
+          [0, 0, 0]
+        );
+      } else {
+        const cte = <Cte>item;
+        ctes = [cte];
+        [dataPagamento, contrato, cheque, motorista] = [
+          cte.dataPagamento,
+          cte.contrato,
+          cte.cheque,
+          cte.motorista,
+        ];
+        [totalFrete, totalIcms, totalCarga] = [cte.valorFrete, cte.valorIcms, cte.valorCarga];
+      }
+
       excelRow = index === 0 ? excelRow : excelRow + 1;
-      console.log('LINHA CARGA', excelRow);
-      const [totalFrete, totalIcms, totalCarga] = ctes.reduce(
-        (totais, cte) => {
-          totais[0] += cte.valorFrete;
-          totais[1] += cte.valorIcms;
-          totais[2] += cte.valorCarga;
-          return totais;
-        },
-        [0, 0, 0]
-      );
+
       const rows = this.generateExcelMergedRows(ctes);
       worksheet.addRows(rows);
-      console.log(rows);
 
       worksheet.eachRow((row) => {
         row.font = {
@@ -131,18 +162,26 @@ export class CteXmlParserService {
         worksheet.mergeCells(merge.start.row, merge.start.col, merge.end.row, merge.end.col)
       );
 
-      ctes.forEach((cte, i) => {
-        excelRow = i === 0 ? excelRow : excelRow + i;
+      ctes.forEach((_, i) => {
+        excelRow = i === 0 ? excelRow : excelRow + 1;
         // VALORES
         const valorCargaCell = worksheet.getCell(`T${excelRow}`);
         valorCargaCell.value = totalCarga;
         valorCargaCell.numFmt = currencyFormat;
 
         worksheet.getCell(`C${excelRow}`).numFmt = currencyFormat;
-        worksheet.getCell(`Q${excelRow}`).value = cte.contrato;
-        worksheet.getCell(`R${excelRow}`).value = cte.dataPagamento;
-        worksheet.getCell(`S${excelRow}`).value = cte.cheque;
+        worksheet.getCell(`R${excelRow}`).numFmt = 'dd/mmm';
+
+        worksheet.getCell(`Q${excelRow}`).value = contrato;
+        worksheet.getCell(`R${excelRow}`).value = dataPagamento;
+        worksheet.getCell(`S${excelRow}`).value = cheque;
+        worksheet.getCell(`A${excelRow}`).value = motorista;
+        // Se nao for mesclagem
         if (!(ctesCarga > 1 && i > 0)) {
+          // worksheet.getCell(`Q${excelRow}`).value = cte.contrato;
+          // worksheet.getCell(`R${excelRow}`).value = cte.dataPagamento;
+          // worksheet.getCell(`S${excelRow}`).value = cte.cheque;
+
           worksheet.getCell(`B${excelRow}`).numFmt = 'dd/mmm';
           worksheet.getCell(`I${excelRow}`).numFmt = currencyFormat;
           worksheet.getCell(`I${excelRow}`).value = totalFrete;
@@ -281,6 +320,10 @@ export class CteXmlParserService {
       .catch((error) => {
         console.error('Erro ao gerar a planilha:', error);
       });
+  }
+
+  private isCarga(item: Cte | Carga): boolean {
+    return 'ctes' in item;
   }
 
   cellsConfig = {

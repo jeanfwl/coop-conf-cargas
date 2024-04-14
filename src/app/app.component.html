@@ -38,6 +38,7 @@
           <div class="flex align-items-center justify-content-between mb-3">
             <h2 class="my-1">Ordene os arquivos selecionados</h2>
             <p-button
+              [disabled]="isLoading || filesNode.length === 0"
               label="Nova Carga"
               styleClass="uppercase"
               [rounded]="true"
@@ -50,9 +51,36 @@
         </ng-template>
         <ng-template let-node pTemplate="default">
           <div class="flex align-items-center gap-2 w-full">
-            <span class="flex-grow-1 flex align-items-center">
-              {{ node.label }}
-            </span>
+            <div class="flex-grow-1 grid m-0 gap-2">
+              <div class="col-2">
+                {{ node.label }}
+              </div>
+              <div class="col-3" *ngIf="!node.parent">
+                @if (node.data.motorista) {
+                <div class="text-overflow-ellipsis white-space-nowrap overflow-hidden">
+                  {{ node.data.motorista }}
+                </div>
+                }
+              </div>
+              <div class="col-2" *ngIf="!node.parent">
+                @if (node.data.contrato) {
+                <i class="pi pi-paperclip"></i>
+                {{ node.data.contrato }}
+                }
+              </div>
+              <div class="col-2" *ngIf="!node.parent">
+                @if (node.data.cheque) {
+                <i class="pi pi-money-bill"></i>
+                {{ node.data.cheque }}
+                }
+              </div>
+              <div class="col-2" *ngIf="!node.parent">
+                @if (node.data.dataPagamento) {
+                <i class="pi pi-calendar"></i>
+                {{ node.data.dataPagamento | date : 'd/MMM' : 'pt-br' }}
+                }
+              </div>
+            </div>
             <div class="flex g-2">
               <p-overlayPanel #op>
                 <ng-template pTemplate="content">
@@ -66,7 +94,7 @@
                       id="contrato"
                       type="text"
                       [(ngModel)]="node.data.contrato"
-                      maxlength="5"
+                      maxlength="4"
                       [useGrouping]="false" />
                   </div>
                   <div class="field">
@@ -75,7 +103,7 @@
                       id="cheque"
                       type="text"
                       [(ngModel)]="node.data.cheque"
-                      maxlength="4"
+                      maxlength="5"
                       [useGrouping]="false" />
                   </div>
                   <div class="field">
@@ -90,7 +118,7 @@
                 </ng-template>
               </p-overlayPanel>
               <p-button
-                *ngIf="node.parent !== null"
+                *ngIf="!node.parent"
                 (click)="op.toggle($event)"
                 size="small"
                 [rounded]="true"
