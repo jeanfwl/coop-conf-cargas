@@ -8,3 +8,13 @@
   border-bottom: 1px solid var(--gray-300);
   margin: 5px auto;
 }
+
+.hover-button {
+  visibility: hidden;
+}
+
+.hover-button-wrapper:hover {
+  .hover-button {
+    visibility: visible;
+  }
+}

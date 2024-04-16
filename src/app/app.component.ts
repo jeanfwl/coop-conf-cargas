@@ -167,17 +167,23 @@ export class AppComponent implements OnInit {
         });
       },
       error: (err) => {
-        console.log('erro 1');
+        console.error(err);
       },
       complete: () => (this.isLoading = false),
     });
   }
 
-  addNodeGroup(): void {
+  addNodeGroupBeforeNode(nodeKey: string): void {
+    const nodeIndex = this.filesNode.findIndex((f) => f.key === nodeKey);
+    if (nodeIndex !== -1) {
+      this.addNodeGroup(nodeIndex);
+    }
+  }
+
+  addNodeGroup(index: number | null = null): void {
     const dataPagamento = new Date();
     dataPagamento.setDate(dataPagamento.getDate() + 6);
-    this.filesNode.push({
-      // key: `${this.filesNode.length}`,
+    const newNode = {
       data: {
         dataPagamento,
       } as Carga,
@@ -186,7 +192,27 @@ export class AppComponent implements OnInit {
       icon: 'pi pi-truck',
       droppable: true,
       children: [],
-    } as TreeNode);
+    } as TreeNode;
+
+    if (index === null) {
+      this.filesNode.unshift(newNode);
+    } else {
+      this.filesNode.splice(index, 0, newNode);
+    }
+  }
+
+  scrollPage(scrollToTop: boolean): void {
+    const scrollConfig = {
+      top: scrollToTop ? 0 : document.body.scrollHeight,
+      left: 0,
+      behavior: 'smooth',
+    } as ScrollToOptions;
+
+    window.scroll(scrollConfig);
+  }
+
+  uppercaseMotorista(motorista: string, item: Cte | Carga): void {
+    item.motorista = motorista.trim().toUpperCase();
   }
 
   generateExcel(): void {

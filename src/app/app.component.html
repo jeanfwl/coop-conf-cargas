@@ -23,6 +23,15 @@
     </div>
     <div class="custom-line"></div>
     <div class="card w-full">
+      <div class="flex justify-content-center">
+        <p-progressSpinner
+          styleClass="w-4rem h-4rem"
+          strokeWidth="4"
+          ariaLabel="Carregando..."
+          styleClass="custom-spinner"
+          *ngIf="isLoading">
+        </p-progressSpinner>
+      </div>
       <p-tree
         (onNodeDrop)="cancel($event)"
         [value]="filesNode"
@@ -50,7 +59,7 @@
           </div>
         </ng-template>
         <ng-template let-node pTemplate="default">
-          <div class="flex align-items-center gap-2 w-full">
+          <div class="flex align-items-center gap-2 w-full hover-button-wrapper">
             <div class="flex-grow-1 grid m-0 gap-2">
               <div class="col-2">
                 {{ node.label }}
@@ -86,7 +95,12 @@
                 <ng-template pTemplate="content">
                   <div class="field">
                     <label class="block" for="motorista">Motorista</label>
-                    <input id="motorista" type="text" pInputText [(ngModel)]="node.data.motorista" />
+                    <input
+                      id="motorista"
+                      type="text"
+                      pInputText
+                      [ngModel]="node.data.motorista"
+                      (ngModelChange)="uppercaseMotorista($event, node.data)" />
                   </div>
                   <div class="field">
                     <label class="block" for="contrato">N° contrato</label>
@@ -119,10 +133,20 @@
               </p-overlayPanel>
               <p-button
                 *ngIf="!node.parent"
+                (onClick)="addNodeGroupBeforeNode(node.key)"
+                class="hover-button"
+                size="small"
+                [rounded]="true"
+                pTooltip="Inserir carga no item anterior"
+                [text]="true"
+                icon="pi pi-truck">
+              </p-button>
+              <p-button
+                *ngIf="!node.parent"
                 (click)="op.toggle($event)"
                 size="small"
                 [rounded]="true"
-                pTooltip="Clique para editar informações adicionais"
+                pTooltip="Editar informações adicionais"
                 [text]="true"
                 icon="pi pi-pencil">
               </p-button>
@@ -139,15 +163,25 @@
           </div>
         </ng-template>
       </p-tree>
-      <div class="flex justify-content-center">
-        <p-progressSpinner
-          styleClass="w-4rem h-4rem"
-          strokeWidth="4"
-          ariaLabel="Carregando..."
-          styleClass="custom-spinner"
-          *ngIf="isLoading">
-        </p-progressSpinner>
-      </div>
     </div>
   </div>
 </main>
+
+<div class="fixed flex gap-2 right-0 bottom-0 p-5">
+  <p-button
+    icon="pi pi-angle-up"
+    [rounded]="true"
+    size="large"
+    (onClick)="scrollPage(true)"
+    [text]="true"
+    pTooltip="Ir para o topo da página">
+  </p-button>
+  <p-button
+    icon="pi pi-angle-down"
+    [rounded]="true"
+    size="large"
+    (onClick)="scrollPage(false)"
+    [text]="true"
+    pTooltip="Ir para o final da página">
+  </p-button>
+</div>
