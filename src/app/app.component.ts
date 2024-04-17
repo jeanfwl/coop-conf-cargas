@@ -8,11 +8,19 @@ import { OrderListModule } from 'primeng/orderlist';
 import { DragDropModule } from 'primeng/dragdrop';
 import { ButtonModule } from 'primeng/button';
 import { TreeModule, TreeNodeDropEvent } from 'primeng/tree';
-import { MessageService, PrimeNGConfig, TreeDragDropService, TreeNode } from 'primeng/api';
+import {
+  MessageService,
+  PrimeNGConfig,
+  TreeDragDropService,
+  TreeNode,
+  ConfirmationService,
+} from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { Observable, delay, from, mergeMap, tap, throwError, toArray } from 'rxjs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { Carga, Cte, CteXml } from './models/cte-information.type';
 import { X2jOptions, XMLParser } from 'fast-xml-parser';
@@ -34,8 +42,6 @@ const parsingOptions = {
   },
 } as X2jOptions;
 
-const currencyFormat = '_-"R$" * #,##0.00_-;-"R$" * #,##0.00_-;_-"R$" * "-"??_-;_-@_-';
-
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -55,12 +61,13 @@ const currencyFormat = '_-"R$" * #,##0.00_-;-"R$" * #,##0.00_-;_-"R$" * "-"??_-;
     InputTextModule,
     FormsModule,
     MessageModule,
+    ConfirmPopupModule,
     FloatLabelModule,
     InputNumberModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  providers: [TreeDragDropService, MessageService],
+  providers: [TreeDragDropService, MessageService, ConfirmationService],
 })
 export class AppComponent implements OnInit {
   filesNode: TreeNode<Cte>[] = [];
@@ -69,7 +76,8 @@ export class AppComponent implements OnInit {
   constructor(
     private messageService: MessageService,
     private cteXmlService: CteXmlParserService,
-    private config: PrimeNGConfig
+    private config: PrimeNGConfig,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -105,6 +113,8 @@ export class AppComponent implements OnInit {
         'Nov',
         'Dez',
       ],
+      accept: 'Sim',
+      reject: 'Não',
     });
   }
 
@@ -199,6 +209,13 @@ export class AppComponent implements OnInit {
     } else {
       this.filesNode.splice(index, 0, newNode);
     }
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Inserção',
+      detail: 'Carga inserida com sucesso!',
+      life: 3000,
+    });
   }
 
   scrollPage(scrollToTop: boolean): void {
@@ -215,7 +232,21 @@ export class AppComponent implements OnInit {
     item.motorista = motorista.trim().toUpperCase();
   }
 
-  generateExcel(): void {
+  confirmExcelLayout(event: Event): void {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: 'Deseja gerar a planilha com os cabeçalhos e rodapés?',
+      icon: 'pi pi-cog',
+      acceptIcon: 'pi pi-check mr-1',
+      rejectIcon: 'pi pi-times mr-1',
+      rejectButtonStyleClass: 'p-button p-button-sm',
+      acceptButtonStyleClass: 'p-button-outlined p-button-sm',
+      accept: () => this.generateExcel(true),
+      reject: () => this.generateExcel(false),
+    });
+  }
+
+  generateExcel(withHeaderAndFooter: boolean): void {
     if (this.filesNode.some((n) => n.children?.length === 0)) {
       this.messageService.add({
         severity: 'warn',
@@ -236,7 +267,7 @@ export class AppComponent implements OnInit {
       }
     });
 
-    this.cteXmlService.createCteExcel(cargas);
+    this.cteXmlService.createCteExcel(cargas, withHeaderAndFooter);
   }
 
   deleteNode(node: TreeNode<File>): void {

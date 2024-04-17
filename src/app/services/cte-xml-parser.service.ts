@@ -67,11 +67,75 @@ export class CteXmlParserService {
     return invoicesConverted.length === 1 ? +invoicesConverted[0] : invoicesConverted.join(', ');
   }
 
-  createCteExcel(itens: (Cte | Carga)[]): void {
-    let excelRow = 1;
+  createCteExcel(itens: (Cte | Carga)[], generateHeaderAndFooter: boolean): void {
+    let excelRow = generateHeaderAndFooter ? 2 : 1;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('COOP');
+
+    if (generateHeaderAndFooter) {
+      worksheet.columns = [
+        { header: 'MOTORISTA', width: 14 },
+        { header: 'DATA CARGA', width: 14 },
+        { header: 'VALOR RELATÓRIO', width: 14 },
+        { header: 'PRODUTO', width: 14 },
+        { header: 'NF', width: 14 },
+        { header: 'ORIGEM', width: 14 },
+        { header: 'DESTINO', width: 14 },
+        { header: 'Nº CTE', width: 14 },
+        { header: 'VALOR CTE', width: 14 },
+        { header: 'VALOR ICMS', width: 14 },
+        { header: 'TAXA COOPERTRAM 3%', width: 14 },
+        {
+          header: 'VALOR COM DESC DA TAXA E ICMS',
+          width: 14,
+          font: {
+            italic: true,
+          },
+        },
+        { header: 'INSS', width: 14 },
+        { header: 'SEST SENAT', width: 14 },
+        { header: 'IR', width: 14 },
+        { header: 'VALOR RESULTADO CONTRATO FRETE', width: 14 },
+        { header: 'Nº CONTRATO DE FRETE', width: 14 },
+        { header: 'DATA DE PAGAMENTO DA CARGA', width: 14 },
+        { header: 'Nº DE CHEQUE', width: 14 },
+        { header: 'VALOR DA CARGA', width: 14 },
+        { header: 'SEGURO DE CARGA', width: 14 },
+        { header: 'TIPO DE DESCONTO', width: 14 },
+        { header: 'VALOR DE DESCONTO', width: 14 },
+        { header: 'ACRÉSCIMO', width: 14 },
+        {
+          header: 'VALOR FINAL',
+          width: 14,
+          font: {
+            italic: true,
+          },
+        },
+      ];
+      const headerRow = worksheet.getRow(1);
+      headerRow.height = 42.6;
+      headerRow.font = {
+        bold: true,
+        size: 10,
+      };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFFF' },
+      };
+      headerRow.alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
+      headerRow.border = {
+        top: { style: 'double', color: { argb: '000' } },
+        left: { style: 'double', color: { argb: '000' } },
+        bottom: { style: 'double', color: { argb: '000' } },
+        right: { style: 'double', color: { argb: '000' } },
+      };
+    }
 
     itens.forEach((item, index) => {
       let ctesCarga = 1;
@@ -118,8 +182,8 @@ export class CteXmlParserService {
 
       const rows = this.generateExcelMergedRows(ctes);
       worksheet.addRows(rows);
-
       worksheet.eachRow((row) => {
+        if (generateHeaderAndFooter && row.number === 1) return;
         row.font = {
           size: 10,
         };
@@ -227,94 +291,19 @@ export class CteXmlParserService {
       });
     });
 
-    // Definindo as mesclagens
-
-    //   worksheet.getCell(`B1`).numFmt = 'dd/mmm';
-    //   for (const index of Array.from({ length: qtdCtes }).map((_, i) => i)) {
-    //     worksheet.getCell(`C${index + 1}`).numFmt = currencyFormat;
-    //   }
-
-    //   worksheet.getCell(`I1`).numFmt = currencyFormat;
-
-    //   worksheet.getCell(`J1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`O1`).value = 0;
-    //   worksheet.getCell(`O1`).numFmt = currencyFormat;
-
-    //   //FORMULAS
-    //   worksheet.getCell(`K1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`K1`).value = { formula: `SUM(I$${excelRow}-J$${excelRow})*0.03` };
-
-    //   worksheet.getCell(`L1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`L1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-    //   worksheet.getCell(`L1`).value = { formula: `SUM(I$${excelRow}-J$${excelRow})*0.97` };
-
-    //   worksheet.getCell(`M1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`M1`).value = { formula: `L$${excelRow}*0.04` };
-
-    //   worksheet.getCell(`N1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`N1`).value = { formula: `L$${excelRow}*0.005` };
-    //   worksheet.getCell(`N1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-
-    //   worksheet.getCell(`P1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`P1`).value = {
-    //     formula: `SUM(L$${excelRow})-(M$${excelRow}+N$${excelRow}+O$${excelRow})`,
-    //   };
-    //   worksheet.getCell(`P1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-
-    //   worksheet.getCell(`U1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`U1`).value = {
-    //     formula: `SUM(T$${excelRow}*0.00015)*0.0738+(T$${excelRow}*0.00015)`,
-    //   };
-
-    //   worksheet.getCell(`X1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`X1`).value = {
-    //     formula: `SUM(W$${excelRow}*0.04)*(7.38%)+(W$${excelRow}*0.04%)`,
-    //   };
-
-    //   worksheet.getCell(`Y1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`Y1`).value = {
-    //     formula: `SUM(P$${excelRow}+X$${excelRow})-(U$${excelRow}+W$${excelRow})`,
-    //   };
-    //   worksheet.getCell(`Y1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-    // } else {
-
-    // }
-
-    // Escrevendo o arquivo Excel
     workbook.xlsx
       .writeBuffer()
       .then((buffer) => {
-        // Cria um Blob a partir do buffer
         const blob = new Blob([buffer], {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         });
-        // Cria um URL para o Blob
+
         const url = window.URL.createObjectURL(blob);
-        // Cria um link para o URL
         const link = document.createElement('a');
         link.href = url;
-        // Define o nome do arquivo
         link.download = 'ctes.xlsx';
-        // Adiciona o link ao documento
-        // Simula um clique no link para iniciar o download
         link.click();
-        // Limpa o URL criado
+
         window.URL.revokeObjectURL(url);
       })
       .catch((error) => {

@@ -1,6 +1,22 @@
 <p-toast position="top-left"></p-toast>
+<p-confirmPopup>
+  <ng-template pTemplate="content" let-message>
+    <div
+      class="flex flex-column align-items-center w-full gap-3 border-bottom-1 surface-border p-3 mb-3">
+      <i [class]="message.icon" class="text-6xl text-primary-500"></i>
+      <p>{{ message.message }}</p>
+    </div>
+  </ng-template>
+</p-confirmPopup>
 
-<main class="container">
+<div
+  class="fixed top-0 flex align-items-center gap-2 justify-content-center w-full surface-50 text-primary"
+  style="height: 35px">
+  Feito por Jean Talar
+  <i class="pi pi-face-smile"></i>
+</div>
+
+<main class="container" style="margin-top: 35px">
   <div class="grid">
     <div class="col-12 text-center">
       <p-fileUpload
@@ -17,7 +33,10 @@
         </ng-template>
         <ng-template pTemplate="file"></ng-template>
         <ng-template pTemplate="toolbar">
-          <p-button (onClick)="generateExcel()" label="Gerar Excel" icon="pi pi-file-excel"></p-button>
+          <p-button
+            (onClick)="confirmExcelLayout($event)"
+            label="Gerar Excel"
+            icon="pi pi-file-excel"></p-button>
         </ng-template>
       </p-fileUpload>
     </div>
