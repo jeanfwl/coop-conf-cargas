@@ -51,11 +51,11 @@ export type Cte = {
   origem: string;
   destino: string;
   numero: number;
-  cheque?: number;
+  cheques?: string[];
   dataPagamento?: Date;
   contrato?: number;
 };
 
 export type Carga = {
   ctes: Cte[];
-} & Pick<Cte, 'dataPagamento' | 'motorista' | 'contrato' | 'cheque'>;
+} & Pick<Cte, 'dataPagamento' | 'motorista' | 'contrato' | 'cheques'>;

@@ -79,7 +79,10 @@ export class CteXmlParserService {
         totalIcms = 0,
         totalCarga = 0;
 
-      let dataPagamento, contrato, cheque, motorista;
+      let dataPagamento,
+        contrato,
+        cheques: string[] = [],
+        motorista;
 
       let ctes: Cte[];
       if (this.isCarga(item)) {
@@ -87,10 +90,10 @@ export class CteXmlParserService {
         ctes = carga.ctes.slice();
         ctesCarga = carga.ctes.length;
 
-        [dataPagamento, contrato, cheque, motorista] = [
+        [dataPagamento, contrato, cheques, motorista] = [
           carga.dataPagamento,
           carga.contrato,
-          carga.cheque,
+          carga.cheques as string[],
           carga.motorista,
         ];
         [totalFrete, totalIcms, totalCarga] = carga.ctes.reduce(
@@ -105,10 +108,10 @@ export class CteXmlParserService {
       } else {
         const cte = <Cte>item;
         ctes = [cte];
-        [dataPagamento, contrato, cheque, motorista] = [
+        [dataPagamento, contrato, cheques, motorista] = [
           cte.dataPagamento,
           cte.contrato,
-          cte.cheque,
+          cte.cheques as string[],
           cte.motorista,
         ];
         [totalFrete, totalIcms, totalCarga] = [cte.valorFrete, cte.valorIcms, cte.valorCarga];
@@ -174,14 +177,11 @@ export class CteXmlParserService {
 
         worksheet.getCell(`Q${excelRow}`).value = contrato;
         worksheet.getCell(`R${excelRow}`).value = dataPagamento;
-        worksheet.getCell(`S${excelRow}`).value = cheque;
+        worksheet.getCell(`S${excelRow}`).value =
+          cheques.length === 1 ? +cheques[0] : cheques.join(' - ');
         worksheet.getCell(`A${excelRow}`).value = motorista;
         // Se nao for mesclagem
         if (!(ctesCarga > 1 && i > 0)) {
-          // worksheet.getCell(`Q${excelRow}`).value = cte.contrato;
-          // worksheet.getCell(`R${excelRow}`).value = cte.dataPagamento;
-          // worksheet.getCell(`S${excelRow}`).value = cte.cheque;
-
           worksheet.getCell(`B${excelRow}`).numFmt = 'dd/mmm';
           worksheet.getCell(`I${excelRow}`).numFmt = currencyFormat;
           worksheet.getCell(`I${excelRow}`).value = totalFrete;
@@ -227,75 +227,6 @@ export class CteXmlParserService {
       });
     });
 
-    // Definindo as mesclagens
-
-    //   worksheet.getCell(`B1`).numFmt = 'dd/mmm';
-    //   for (const index of Array.from({ length: qtdCtes }).map((_, i) => i)) {
-    //     worksheet.getCell(`C${index + 1}`).numFmt = currencyFormat;
-    //   }
-
-    //   worksheet.getCell(`I1`).numFmt = currencyFormat;
-
-    //   worksheet.getCell(`J1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`O1`).value = 0;
-    //   worksheet.getCell(`O1`).numFmt = currencyFormat;
-
-    //   //FORMULAS
-    //   worksheet.getCell(`K1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`K1`).value = { formula: `SUM(I$${excelRow}-J$${excelRow})*0.03` };
-
-    //   worksheet.getCell(`L1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`L1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-    //   worksheet.getCell(`L1`).value = { formula: `SUM(I$${excelRow}-J$${excelRow})*0.97` };
-
-    //   worksheet.getCell(`M1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`M1`).value = { formula: `L$${excelRow}*0.04` };
-
-    //   worksheet.getCell(`N1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`N1`).value = { formula: `L$${excelRow}*0.005` };
-    //   worksheet.getCell(`N1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-
-    //   worksheet.getCell(`P1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`P1`).value = {
-    //     formula: `SUM(L$${excelRow})-(M$${excelRow}+N$${excelRow}+O$${excelRow})`,
-    //   };
-    //   worksheet.getCell(`P1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-
-    //   worksheet.getCell(`U1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`U1`).value = {
-    //     formula: `SUM(T$${excelRow}*0.00015)*0.0738+(T$${excelRow}*0.00015)`,
-    //   };
-
-    //   worksheet.getCell(`X1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`X1`).value = {
-    //     formula: `SUM(W$${excelRow}*0.04)*(7.38%)+(W$${excelRow}*0.04%)`,
-    //   };
-
-    //   worksheet.getCell(`Y1`).numFmt = currencyFormat;
-    //   worksheet.getCell(`Y1`).value = {
-    //     formula: `SUM(P$${excelRow}+X$${excelRow})-(U$${excelRow}+W$${excelRow})`,
-    //   };
-    //   worksheet.getCell(`Y1`).font = {
-    //     bold: true,
-    //     italic: true,
-    //     size: 10,
-    //   };
-    // } else {
-
-    // }
-
     // Escrevendo o arquivo Excel
     workbook.xlsx
       .writeBuffer()
@@ -304,17 +235,11 @@ export class CteXmlParserService {
         const blob = new Blob([buffer], {
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         });
-        // Cria um URL para o Blob
         const url = window.URL.createObjectURL(blob);
-        // Cria um link para o URL
         const link = document.createElement('a');
         link.href = url;
-        // Define o nome do arquivo
-        link.download = 'ctes.xlsx';
-        // Adiciona o link ao documento
-        // Simula um clique no link para iniciar o download
+        link.download = 'cargas.xlsx';
         link.click();
-        // Limpa o URL criado
         window.URL.revokeObjectURL(url);
       })
       .catch((error) => {

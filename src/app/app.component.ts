@@ -8,9 +8,10 @@ import { OrderListModule } from 'primeng/orderlist';
 import { DragDropModule } from 'primeng/dragdrop';
 import { ButtonModule } from 'primeng/button';
 import { TreeModule, TreeNodeDropEvent } from 'primeng/tree';
+import { ChipsModule } from 'primeng/chips';
 import { MessageService, PrimeNGConfig, TreeDragDropService, TreeNode } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { Observable, delay, from, mergeMap, tap, throwError, toArray } from 'rxjs';
+import { Observable, delay, from, mergeMap, toArray } from 'rxjs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
@@ -34,8 +35,6 @@ const parsingOptions = {
   },
 } as X2jOptions;
 
-const currencyFormat = '_-"R$" * #,##0.00_-;-"R$" * #,##0.00_-;_-"R$" * "-"??_-;_-@_-';
-
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -56,6 +55,7 @@ const currencyFormat = '_-"R$" * #,##0.00_-;-"R$" * #,##0.00_-;_-"R$" * "-"??_-;
     FormsModule,
     MessageModule,
     FloatLabelModule,
+    ChipsModule,
     InputNumberModule,
   ],
   templateUrl: './app.component.html',
@@ -126,10 +126,12 @@ export class AppComponent implements OnInit {
         });
 
         const currentNodes = this.filesNode.slice().filter((f) => f.droppable === false);
-        const newCtes = ctes.filter(
-          (cte) => currentNodes.map((n) => n.data?.numero).includes(cte.numero) === false
-        );
+        const newCtes = ctes
+          .filter((cte) => currentNodes.map((n) => n.data?.numero).includes(cte.numero) === false)
+          .sort((a, b) => (+a.numero > +b.numero ? 1 : -1));
+
         const newNodes = newCtes.map((cte) => {
+          cte.cheques = [];
           return {
             key: String(crypto.randomUUID()),
             icon: 'pi pi-file',
@@ -186,6 +188,7 @@ export class AppComponent implements OnInit {
     const newNode = {
       data: {
         dataPagamento,
+        cheques: [] as string[],
       } as Carga,
       key: crypto.randomUUID(),
       label: 'Carga',

@@ -28,3 +28,17 @@
 .p-tooltip-text {
   font-size: 0.85rem;
 }
+
+.field {
+  .p-inputwrapper,
+  .p-inputnumber,
+  .p-inputtext,
+  .p-calendar,
+  .p-chips {
+    width: 100%;
+  }
+}
+
+.p-overlaypanel-content {
+  width: 335px;
+}
