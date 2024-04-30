@@ -125,9 +125,17 @@ export class AppComponent implements OnInit {
           return this.cteXmlService.extractCteXmlInfo(xmlContentParsedAsJSON);
         });
 
-        const currentNodes = this.filesNode.slice().filter((f) => f.droppable === false);
+        const currentNodes = this.filesNode.slice();
+
+        const currentCtes = currentNodes
+          .flatMap((f) => {
+            if (f.droppable) return f.children!;
+            else return [f];
+          })
+          .map((f) => f.data?.numero);
+
         const newCtes = ctes
-          .filter((cte) => currentNodes.map((n) => n.data?.numero).includes(cte.numero) === false)
+          .filter((cte) => currentCtes.includes(cte.numero) === false)
           .sort((a, b) => (+a.numero > +b.numero ? 1 : -1));
 
         const newNodes = newCtes.map((cte) => {
