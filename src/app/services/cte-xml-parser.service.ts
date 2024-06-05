@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Carga, Cte, CteXml, Nfe } from '../models/cte-information.type';
+import { Carga, Cte, CteXml, Desconto, Nfe } from '../models/cte-information.type';
 import { ComplementObservation, Complements } from '../models/complements.type';
 import * as ExcelJS from 'exceljs';
 
@@ -31,6 +31,7 @@ export class CteXmlParserService {
       produto: infCte.infCTeNorm?.infCarga.proPred,
       notas: nfes,
       dataPagamento: dataPagamento,
+      descontos: [],
     };
   }
 
@@ -82,6 +83,7 @@ export class CteXmlParserService {
       let dataPagamento,
         contrato,
         cheques: string[] = [],
+        descontos: Desconto[] = [],
         motorista;
 
       let ctes: Cte[];
@@ -90,11 +92,12 @@ export class CteXmlParserService {
         ctes = carga.ctes.slice();
         ctesCarga = carga.ctes.length;
 
-        [dataPagamento, contrato, cheques, motorista] = [
+        [dataPagamento, contrato, cheques, motorista, descontos] = [
           carga.dataPagamento,
           carga.contrato,
           carga.cheques as string[],
           carga.motorista,
+          carga.descontos as Desconto[],
         ];
         [totalFrete, totalIcms, totalCarga] = carga.ctes.reduce(
           (totais, cte) => {
@@ -108,14 +111,19 @@ export class CteXmlParserService {
       } else {
         const cte = <Cte>item;
         ctes = [cte];
-        [dataPagamento, contrato, cheques, motorista] = [
+        [dataPagamento, contrato, cheques, motorista, descontos] = [
           cte.dataPagamento,
           cte.contrato,
           cte.cheques as string[],
           cte.motorista,
+          cte.descontos as Desconto[],
         ];
         [totalFrete, totalIcms, totalCarga] = [cte.valorFrete, cte.valorIcms, cte.valorCarga];
       }
+
+      descontos = descontos
+        .filter((desconto) => desconto.descricao && desconto.preco)
+        .sort((a, b) => a.descricao.localeCompare(b.descricao));
 
       excelRow = index === 0 ? excelRow : excelRow + 1;
 
@@ -172,6 +180,7 @@ export class CteXmlParserService {
         valorCargaCell.value = totalCarga;
         valorCargaCell.numFmt = currencyFormat;
 
+        worksheet.getCell(`A${excelRow}`).value = motorista;
         worksheet.getCell(`C${excelRow}`).numFmt = currencyFormat;
         worksheet.getCell(`R${excelRow}`).numFmt = 'dd/mmm';
 
@@ -179,7 +188,17 @@ export class CteXmlParserService {
         worksheet.getCell(`R${excelRow}`).value = dataPagamento;
         worksheet.getCell(`S${excelRow}`).value =
           cheques.length === 1 ? +cheques[0] : cheques.join(' - ');
-        worksheet.getCell(`A${excelRow}`).value = motorista;
+
+        worksheet.getCell(`V${excelRow}`).value = descontos
+          .map((d) => d.descricao.toUpperCase())
+          .join(', ');
+        worksheet.getCell(`W${excelRow}`).value = descontos
+          .map((d) => +d.preco!)
+          .reduce((it, acc) => {
+            return it + acc;
+          }, 0);
+        worksheet.getCell(`W${excelRow}`).numFmt = currencyFormat;
+
         // Se nao for mesclagem
         if (!(ctesCarga > 1 && i > 0)) {
           worksheet.getCell(`B${excelRow}`).numFmt = 'dd/mmm';

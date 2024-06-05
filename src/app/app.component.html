@@ -121,7 +121,16 @@
                       [useGrouping]="false" />
                   </div>
                   <div class="field">
-                    <label class="block" for="cheque">N° cheque</label>
+                    <label class="block" for="pagamento">Data de pagamento</label>
+                    <p-calendar
+                      id="pagamento"
+                      [(ngModel)]="node.data.dataPagamento"
+                      [showButtonBar]="true"
+                      dateFormat="dd/mm/yy">
+                    </p-calendar>
+                  </div>
+                  <div class="field">
+                    <label class="block" for="cheque">Cheques</label>
                     <p-chips
                       id="cheque"
                       separator=" "
@@ -130,13 +139,55 @@
                     </p-chips>
                   </div>
                   <div class="field">
-                    <label class="block" for="pagamento">Data de pagamento</label>
-                    <p-calendar
-                      id="pagamento"
-                      [(ngModel)]="node.data.dataPagamento"
-                      [showButtonBar]="true"
-                      dateFormat="dd/mm/yy">
-                    </p-calendar>
+                    <div class="flex align-items-center justify-content-between">
+                      <label class="block" for="cheque">Descontos</label>
+                      <p-button
+                        (onClick)="onAddNewDesconto(node.data)"
+                        size="small"
+                        [rounded]="true"
+                        pTooltip="Novo desconto"
+                        [text]="true"
+                        icon="pi pi-plus">
+                      </p-button>
+                    </div>
+                    <p-divider />
+                    <div>
+                      @for (desconto of node.data.descontos; track desconto) {
+                      <div class="grid align-items-center">
+                        <div class="col-5">
+                          <input
+                            type="text"
+                            pInputText
+                            placeholder="Descrição"
+                            [(ngModel)]="desconto.descricao" />
+                        </div>
+                        <div class="col-5">
+                          <p-inputNumber
+                            type="text"
+                            [useGrouping]="true"
+                            prefix="R$ "
+                            placeholder="0,00"
+                            mode="decimal"
+                            locale="pt-BR"
+                            [maxFractionDigits]="2"
+                            [minFractionDigits]="2"
+                            [(ngModel)]="desconto.preco" />
+                        </div>
+                        <div class="col-2">
+                          <p-button
+                            (onClick)="onRemoveDesconto(node.data, $index)"
+                            size="small"
+                            [rounded]="true"
+                            pTooltip="Remover desconto"
+                            [text]="true"
+                            icon="pi pi-times">
+                          </p-button>
+                        </div>
+                      </div>
+                      } @if (node.data.descontos.length === 0) {
+                      <p class="text-500 m-0">Ainda não há descontos para mostrar</p>
+                      }
+                    </div>
                   </div>
                 </ng-template>
               </p-overlayPanel>

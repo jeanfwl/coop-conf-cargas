@@ -15,7 +15,7 @@ import { Observable, delay, from, mergeMap, toArray } from 'rxjs';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { Carga, Cte, CteXml } from './models/cte-information.type';
+import { Carga, Cte, CteXml, Desconto } from './models/cte-information.type';
 import { X2jOptions, XMLParser } from 'fast-xml-parser';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -23,6 +23,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { DividerModule } from 'primeng/divider';
+
 const parsingOptions = {
   ignoreAttributes: false,
   processEntities: true,
@@ -57,6 +59,7 @@ const parsingOptions = {
     FloatLabelModule,
     ChipsModule,
     InputNumberModule,
+    DividerModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -197,6 +200,7 @@ export class AppComponent implements OnInit {
       data: {
         dataPagamento,
         cheques: [] as string[],
+        descontos: [] as Desconto[],
       } as Carga,
       key: crypto.randomUUID(),
       label: 'Carga',
@@ -220,6 +224,17 @@ export class AppComponent implements OnInit {
     } as ScrollToOptions;
 
     window.scroll(scrollConfig);
+  }
+
+  onAddNewDesconto(item: Cte | Carga): void {
+    item.descontos?.push({
+      descricao: '',
+      preco: null,
+    });
+  }
+
+  onRemoveDesconto(item: Cte | Carga, index: number): void {
+    item.descontos?.splice(index, 1);
   }
 
   uppercaseMotorista(motorista: string, item: Cte | Carga): void {

@@ -53,9 +53,15 @@ export type Cte = {
   numero: number;
   cheques?: string[];
   dataPagamento?: Date;
+  descontos?: Desconto[];
   contrato?: number;
+};
+
+export type Desconto = {
+  descricao: string;
+  preco: number | null;
 };
 
 export type Carga = {
   ctes: Cte[];
-} & Pick<Cte, 'dataPagamento' | 'motorista' | 'contrato' | 'cheques'>;
+} & Pick<Cte, 'dataPagamento' | 'motorista' | 'contrato' | 'cheques' | 'descontos'>;
