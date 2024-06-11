@@ -29,6 +29,9 @@ type CteInformation = {
       infNFe: Nfe[] | Nfe;
     };
   };
+  infCteComp: {
+    chCTe: string;
+  };
 };
 
 export type CteXml = {
@@ -39,6 +42,14 @@ export type CteXml = {
   };
 };
 
+export enum Produtos {
+  APARAS = 'APARAS DE PAPEL',
+  CELULOSE = 'CELULOSE',
+  ROLOS = 'ROLOS',
+  PAPEL_HIGIENICO = 'PAPEL HIGIENICO',
+  BOBINA = 'BOBINA',
+}
+
 export type Cte = {
   motorista: string;
   carga: string;
@@ -46,7 +57,7 @@ export type Cte = {
   valorFrete: number;
   valorIcms: number;
   valorCarga: number;
-  produto: string;
+  produto: Produtos;
   notas: string | number;
   origem: string;
   destino: string;
@@ -55,6 +66,8 @@ export type Cte = {
   dataPagamento?: Date;
   descontos?: Desconto[];
   contrato?: number;
+  isComplemento: boolean;
+  isRetorno: boolean;
 };
 
 export type Desconto = {

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Carga, Cte, CteXml, Desconto, Nfe } from '../models/cte-information.type';
+import { Carga, Cte, CteXml, Desconto, Nfe, Produtos } from '../models/cte-information.type';
 import { ComplementObservation, Complements } from '../models/complements.type';
 import * as ExcelJS from 'exceljs';
 
@@ -25,10 +25,12 @@ export class CteXmlParserService {
       destino: infCte.ide.xMunFim,
       carga: loadCode,
       motorista: driverName,
+      isComplemento: !!infCte.infCteComp,
+      isRetorno: infCte.ide.xMunFim.toUpperCase() === 'MALLET',
       valorFrete: infCte.vPrest.vRec,
       valorIcms: infCte.imp.ICMS?.ICMS00?.vICMS ?? 0,
       valorCarga: infCte.infCTeNorm?.infCarga.vCarga ?? 0,
-      produto: infCte.infCTeNorm?.infCarga.proPred,
+      produto: infCte.infCTeNorm?.infCarga.proPred as Produtos,
       notas: nfes,
       dataPagamento: dataPagamento,
       descontos: [],
@@ -84,7 +86,10 @@ export class CteXmlParserService {
         contrato,
         cheques: string[] = [],
         descontos: Desconto[] = [],
-        motorista;
+        produtos: Produtos[] = [],
+        motorista,
+        isComplemento = false,
+        isRetorno = false;
 
       let ctes: Cte[];
       if (this.isCarga(item)) {
@@ -92,12 +97,15 @@ export class CteXmlParserService {
         ctes = carga.ctes.slice();
         ctesCarga = carga.ctes.length;
 
-        [dataPagamento, contrato, cheques, motorista, descontos] = [
+        [dataPagamento, contrato, cheques, motorista, descontos, produtos, isComplemento, isRetorno] = [
           carga.dataPagamento,
           carga.contrato,
           carga.cheques as string[],
           carga.motorista,
           carga.descontos as Desconto[],
+          carga.ctes.map((cte) => cte.produto),
+          carga.ctes.some((cte) => cte.isComplemento),
+          carga.ctes.some((cte) => cte.isRetorno),
         ];
         [totalFrete, totalIcms, totalCarga] = carga.ctes.reduce(
           (totais, cte) => {
@@ -111,14 +119,26 @@ export class CteXmlParserService {
       } else {
         const cte = <Cte>item;
         ctes = [cte];
-        [dataPagamento, contrato, cheques, motorista, descontos] = [
+        [dataPagamento, contrato, cheques, motorista, descontos, produtos, isComplemento, isRetorno] = [
           cte.dataPagamento,
           cte.contrato,
           cte.cheques as string[],
           cte.motorista,
           cte.descontos as Desconto[],
+          [cte.produto],
+          cte.isComplemento,
+          cte.isRetorno,
         ];
         [totalFrete, totalIcms, totalCarga] = [cte.valorFrete, cte.valorIcms, cte.valorCarga];
+      }
+
+      // padrão ter 3% de taxa, caso for retorno e os produtos forem celulose e bobina, mantém a taxa, senão, remove
+      let taxaCoop: number | null = 0.03;
+      if (
+        isRetorno &&
+        (produtos.includes(Produtos.CELULOSE) || produtos.includes(Produtos.BOBINA)) === false
+      ) {
+        taxaCoop = null;
       }
 
       descontos = descontos
@@ -212,16 +232,20 @@ export class CteXmlParserService {
 
           //FORMULAS
           worksheet.getCell(`K${excelRow}`).numFmt = currencyFormat;
-          worksheet.getCell(`K${excelRow}`).value = { formula: `SUM(I${excelRow}-J${excelRow})*0.03` };
+          worksheet.getCell(`K${excelRow}`).value = {
+            formula: `(I${excelRow}-J${excelRow})${taxaCoop ? `*${taxaCoop}` : ''}`,
+          };
 
           worksheet.getCell(`L${excelRow}`).numFmt = currencyFormat;
-          worksheet.getCell(`L${excelRow}`).value = { formula: `SUM(I${excelRow}-J${excelRow})*0.97` };
+          worksheet.getCell(`L${excelRow}`).value = { formula: `(I${excelRow}-J${excelRow})*0.97` };
 
           worksheet.getCell(`M${excelRow}`).numFmt = currencyFormat;
-          worksheet.getCell(`M${excelRow}`).value = { formula: `L${excelRow}*0.04` };
+          worksheet.getCell(`M${excelRow}`).value = isComplemento ? 0 : { formula: `L${excelRow}*0.04` };
 
           worksheet.getCell(`N${excelRow}`).numFmt = currencyFormat;
-          worksheet.getCell(`N${excelRow}`).value = { formula: `L${excelRow}*0.005` };
+          worksheet.getCell(`N${excelRow}`).value = isComplemento
+            ? 0
+            : { formula: `L${excelRow}*0.005` };
 
           worksheet.getCell(`P${excelRow}`).numFmt = currencyFormat;
           worksheet.getCell(`P${excelRow}`).value = {
@@ -229,9 +253,11 @@ export class CteXmlParserService {
           };
 
           worksheet.getCell(`U${excelRow}`).numFmt = currencyFormat;
-          worksheet.getCell(`U${excelRow}`).value = {
-            formula: `SUM(T${excelRow}*0.00015)*0.0738+(T${excelRow}*0.00015)`,
-          };
+          worksheet.getCell(`U${excelRow}`).value = isComplemento
+            ? 0
+            : {
+                formula: `SUM(T${excelRow}*0.00015)*0.0738+(T${excelRow}*0.00015)`,
+              };
 
           worksheet.getCell(`X${excelRow}`).numFmt = currencyFormat;
           worksheet.getCell(`X${excelRow}`).value = {
@@ -298,8 +324,6 @@ export class CteXmlParserService {
         cte.origem,
         cte.destino,
         cte.numero,
-        // cte.valorFrete,
-        // cte.valorIcms,
       ];
     });
   }
