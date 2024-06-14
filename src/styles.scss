@@ -42,3 +42,17 @@
 .p-overlaypanel-content {
   width: 335px;
 }
+
+.selectbutton-primary {
+  width: 100%;
+  display: flex;
+  > * {
+    flex: 1;
+    &.p-highlight {
+      color: #fff;
+      &::before {
+        background-color: var(--primary-color);
+      }
+    }
+  }
+}

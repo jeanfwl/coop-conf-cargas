@@ -112,7 +112,7 @@
                       (ngModelChange)="uppercaseMotorista($event, node.data)" />
                   </div>
                   <div class="field">
-                    <label class="block" for="contrato">N° contrato</label>
+                    <label class="block" for="contrato">Contrato</label>
                     <p-inputNumber
                       id="contrato"
                       type="text"
@@ -133,14 +133,31 @@
                     <label class="block" for="cheque">Cheques</label>
                     <p-chips
                       id="cheque"
+                      [maxLength]="5"
                       separator=" "
                       [allowDuplicate]="false"
                       [(ngModel)]="node.data.cheques">
                     </p-chips>
                   </div>
                   <div class="field">
+                    <label class="block" for="taxaCooperativa">
+                      Taxas de contrato e da cooperativa
+                    </label>
+                    <p-selectButton
+                      id="taxaCooperativa"
+                      styleClass="selectbutton-primary"
+                      [(ngModel)]="node.data.taxas"
+                      [options]="[
+                        { label: '96% e 4%', value: { cooperativa: 0.04, contrato: 0.96 } },
+                        { label: '97% e 3%', value: { cooperativa: 0.03, contrato: 0.97 } }
+                      ]"
+                      optionLabel="label"
+                      optionValue="value"
+                      [allowEmpty]="false" />
+                  </div>
+                  <div class="field">
                     <div class="flex align-items-center justify-content-between">
-                      <label class="block" for="cheque">Descontos</label>
+                      <label class="block">Descontos</label>
                       <p-button
                         (onClick)="onAddNewDesconto(node.data)"
                         size="small"

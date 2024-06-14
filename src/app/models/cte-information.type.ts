@@ -68,6 +68,12 @@ export type Cte = {
   contrato?: number;
   isComplemento: boolean;
   isRetorno: boolean;
+  taxas: Taxas;
+};
+
+export type Taxas = {
+  contrato: number;
+  cooperativa: number;
 };
 
 export type Desconto = {
@@ -77,4 +83,4 @@ export type Desconto = {
 
 export type Carga = {
   ctes: Cte[];
-} & Pick<Cte, 'dataPagamento' | 'motorista' | 'contrato' | 'cheques' | 'descontos'>;
+} & Pick<Cte, 'dataPagamento' | 'motorista' | 'contrato' | 'cheques' | 'descontos' | 'taxas'>;

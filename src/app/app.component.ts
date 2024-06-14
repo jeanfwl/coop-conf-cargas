@@ -24,6 +24,7 @@ import { FormsModule } from '@angular/forms';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
+import { SelectButtonModule } from 'primeng/selectbutton';
 
 const parsingOptions = {
   ignoreAttributes: false,
@@ -60,6 +61,7 @@ const parsingOptions = {
     ChipsModule,
     InputNumberModule,
     DividerModule,
+    SelectButtonModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -201,6 +203,10 @@ export class AppComponent implements OnInit {
         dataPagamento,
         cheques: [] as string[],
         descontos: [] as Desconto[],
+        taxas: {
+          contrato: 0.97,
+          cooperativa: 0.03,
+        },
       } as Carga,
       key: crypto.randomUUID(),
       label: 'Carga',
