@@ -1,5 +1,5 @@
 import { CteXmlParserService } from './services/cte-xml-parser.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 
@@ -25,6 +25,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { DialogModule } from 'primeng/dialog';
 
 const parsingOptions = {
   ignoreAttributes: false,
@@ -62,22 +63,31 @@ const parsingOptions = {
     InputNumberModule,
     DividerModule,
     SelectButtonModule,
+    DialogModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   providers: [TreeDragDropService, MessageService],
 })
 export class AppComponent implements OnInit {
+  private readonly messageService = inject(MessageService);
+  private readonly cteXmlService = inject(CteXmlParserService);
+  private readonly config = inject(PrimeNGConfig);
+
   filesNode: TreeNode<Cte>[] = [];
   isLoading = false;
+  visible = false;
 
-  constructor(
-    private messageService: MessageService,
-    private cteXmlService: CteXmlParserService,
-    private config: PrimeNGConfig
-  ) {}
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    this.onSaveData();
+    $event.preventDefault();
+    $event.returnValue = true;
+  }
 
   ngOnInit(): void {
+    this.scheduleSave();
+
     this.config.setTranslation({
       clear: 'Limpar',
       today: 'Hoje',
@@ -111,6 +121,50 @@ export class AppComponent implements OnInit {
         'Dez',
       ],
     });
+  }
+
+  onLoadSavedData(): void {
+    this.visible = true;
+    if (window.localStorage.getItem('ctes')) {
+      setTimeout(() => {
+        const ctes = JSON.parse(window.localStorage.getItem('ctes')!);
+        this.filesNode = ctes;
+        this.visible = false;
+      }, 300);
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Você ainda não salvou nenhum progresso',
+        life: 3000,
+      });
+    }
+  }
+
+  onSaveData(): void {
+    if (this.filesNode.length) {
+      window.localStorage.setItem('ctes', JSON.stringify(this.filesNode));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Alerta',
+        detail: 'Progresso atual salvo com sucesso!',
+        life: 3000,
+      });
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erro',
+        detail: 'Não adianta tentar salvar o que ainda nem fez',
+        life: 3000,
+      });
+    }
+  }
+
+  scheduleSave(): void {
+    setTimeout(() => {
+      this.onSaveData();
+      this.scheduleSave();
+    }, 300000); // 5 minutes
   }
 
   onFilesSelected(event: FileSelectEvent): void {

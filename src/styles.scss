@@ -56,3 +56,16 @@
     }
   }
 }
+
+.p-tree {
+  .p-tree-loading-overlay {
+    align-items: flex-start;
+    border-radius: 16px;
+    background-color: rgb(246 246 246 / 40%) !important;
+
+    spinnericon {
+      margin-top: 20px;
+      color: var(--primary-color);
+    }
+  }
+}

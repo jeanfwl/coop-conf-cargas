@@ -12,7 +12,7 @@
     <div class="col-12 text-center">
       <p-fileUpload
         mode="advanced"
-        chooseLabel="Selecione os arquivos"
+        chooseLabel="Selecionar Arquivos"
         chooseIcon="pi pi-upload"
         accept=".xml"
         [multiple]="true"
@@ -20,39 +20,38 @@
         [showCancelButton]="false"
         (onSelect)="onFilesSelected($event)">
         <ng-template let-files pTemplate="content">
-          @if (files.length) { Esqueceu algum xml? Adicione mais arquivos arrastando-os até aqui! }
+          @if (filesNode.length) { Esqueceu algum xml? Adicione mais arquivos arrastando-os até
+          <b>aqui!</b>
+          } @else { Clique para selecionar os arquivos e começar a utilizar a ferramenta
+          <br />
+          Se você já tem um trabalho salvo, basta clicar em carregar }
         </ng-template>
         <ng-template pTemplate="file"></ng-template>
         <ng-template pTemplate="toolbar">
           <p-button (onClick)="generateExcel()" label="Gerar Excel" icon="pi pi-file-excel"></p-button>
+          <p-button (onClick)="onSaveData()" label="Salvar" icon="pi pi-cloud-download"></p-button>
+          <p-button (onClick)="onLoadSavedData()" label="Carregar" icon="pi pi-cloud-upload"></p-button>
         </ng-template>
       </p-fileUpload>
     </div>
     <div class="custom-line"></div>
     <div class="card w-full">
-      <div class="flex justify-content-center">
-        <p-progressSpinner
-          styleClass="w-4rem h-4rem"
-          strokeWidth="4"
-          ariaLabel="Carregando..."
-          styleClass="custom-spinner"
-          *ngIf="isLoading">
-        </p-progressSpinner>
-      </div>
       <p-tree
+        [loading]="isLoading"
+        loadingMode="icon"
         (onNodeDrop)="cancel($event)"
         [value]="filesNode"
         [draggableNodes]="true"
         [droppableNodes]="true"
         draggableScope="self"
-        droppableScope="self">
-        <ng-template pTemplate="empty">
-          <p-message styleClass="mt-2" severity="info" text="Nenhum arquivo selecionado ainda">
-          </p-message>
-        </ng-template>
+        droppableScope="self"
+        styleClass="custom-tree-overlay">
+        <ng-template pTemplate="empty"> </ng-template>
         <ng-template pTemplate="header">
           <div class="flex align-items-center justify-content-between mb-3">
-            <h2 class="my-1">Ordene os arquivos selecionados</h2>
+            <h2 class="my-1">
+              @if (filesNode.length) { Gerencie os CT-es } @else { Selecione os CT-es para começar }
+            </h2>
             <p-button
               [disabled]="isLoading || filesNode.length === 0"
               label="Nova Carga"
@@ -262,3 +261,12 @@
     pTooltip="Ir para o final da página">
   </p-button>
 </div>
+
+<p-dialog [(visible)]="visible" [modal]="true">
+  <ng-template pTemplate="headless">
+    <div class="p-6 flex flex-column gap-3">
+      <span class="p-text-secondary">Aguarde o carregamento do progresso salvo...</span>
+      <i class="pi pi-spin pi-spinner text-center text-4xl text-primary"></i>
+    </div>
+  </ng-template>
+</p-dialog>
