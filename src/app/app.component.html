@@ -122,9 +122,11 @@
                   <div class="field">
                     <label class="block" for="pagamento">Data de pagamento</label>
                     <p-calendar
+                      clearButtonStyleClass="hidden"
                       id="pagamento"
                       [(ngModel)]="node.data.dataPagamento"
                       [showButtonBar]="true"
+                      [readonlyInput]="true"
                       dateFormat="dd/mm/yy">
                     </p-calendar>
                   </div>

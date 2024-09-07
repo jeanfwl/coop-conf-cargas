@@ -80,7 +80,6 @@ export class AppComponent implements OnInit {
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    this.onSaveData();
     $event.preventDefault();
     $event.returnValue = true;
   }
@@ -128,6 +127,9 @@ export class AppComponent implements OnInit {
     if (window.localStorage.getItem('ctes')) {
       setTimeout(() => {
         const ctes = JSON.parse(window.localStorage.getItem('ctes')!);
+        ctes.forEach((cte: any) => {
+          cte.data.dataPagamento = new Date(cte.data.dataPagamento);
+        });
         this.filesNode = ctes;
         this.visible = false;
       }, 300);
@@ -143,7 +145,13 @@ export class AppComponent implements OnInit {
 
   onSaveData(): void {
     if (this.filesNode.length) {
-      window.localStorage.setItem('ctes', JSON.stringify(this.filesNode));
+      const filesNodeCleared = this.filesNode.map((f) => {
+        if (f.children) {
+          f.children.forEach((c) => delete c.parent);
+        }
+        return f;
+      });
+      window.localStorage.setItem('ctes', JSON.stringify(filesNodeCleared));
       this.messageService.add({
         severity: 'success',
         summary: 'Alerta',
