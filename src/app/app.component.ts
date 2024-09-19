@@ -127,8 +127,9 @@ export class AppComponent implements OnInit {
     if (window.localStorage.getItem('ctes')) {
       setTimeout(() => {
         const ctes = JSON.parse(window.localStorage.getItem('ctes')!);
-        ctes.forEach((cte: any) => {
-          cte.data.dataPagamento = new Date(cte.data.dataPagamento);
+        ctes.forEach((cte: TreeNode<Cte>) => {
+          cte.data!.dataPagamento = new Date(cte.data?.dataPagamento!);
+          cte.data!.dataEmissao = new Date(cte.data?.dataEmissao!);
         });
         this.filesNode = ctes;
         this.visible = false;
