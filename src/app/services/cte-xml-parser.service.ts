@@ -291,7 +291,7 @@ export class CteXmlParserService {
           worksheet.getCell(`U${excelRow}`).value = isComplemento
             ? 0
             : {
-                formula: `SUM(T${excelRow}*0.00015)*0.0738+(T${excelRow}*0.00015)`,
+                formula: `SUM(T${excelRow}*0.00030)*0.0738+(T${excelRow}*0.00030)`,
               };
 
           worksheet.getCell(`X${excelRow}`).numFmt = currencyFormat;
