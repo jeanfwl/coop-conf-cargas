@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Carga, Cte, CteXml, Desconto, Nfe, Produtos, Taxas } from '../models/cte-information.type';
 import { ComplementObservation, Complements } from '../models/complements.type';
 import * as ExcelJS from 'exceljs';
+import { getTaxes } from './discount-uf';
 
 const currencyFormat = '_-"R$" * #,##0.00_-;-"R$" * #,##0.00_-;_-"R$" * "-"??_-;_-@_-';
 
@@ -22,7 +23,9 @@ export class CteXmlParserService {
       numero: infCte.ide.nCT,
       dataEmissao: emissionDate,
       origem: infCte.ide.xMunIni,
+      ufOrigem: infCte.ide.UFIni,
       destino: infCte.ide.xMunFim,
+      ufDestino: infCte.ide.UFFim,
       carga: loadCode,
       motorista: driverName,
       isComplemento: !!infCte.infCteComp,
@@ -97,7 +100,8 @@ export class CteXmlParserService {
         taxas: Taxas = {
           contrato: 0.97,
           cooperativa: 0.03,
-        };
+        },
+        taxasSeguro;
 
       let ctes: Cte[];
       if (this.isCarga(item)) {
@@ -115,6 +119,7 @@ export class CteXmlParserService {
           isComplemento,
           isRetorno,
           taxas,
+          taxasSeguro,
         ] = [
           carga.dataPagamento,
           carga.contrato,
@@ -125,6 +130,7 @@ export class CteXmlParserService {
           carga.ctes.some((cte) => cte.isComplemento),
           carga.ctes.some((cte) => cte.isRetorno),
           carga.taxas,
+          getTaxes(carga.ctes[0].ufOrigem, carga.ctes[0].ufDestino),
         ];
         [totalFrete, totalIcms, totalCarga] = carga.ctes.reduce(
           (totais, cte) => {
@@ -148,6 +154,7 @@ export class CteXmlParserService {
           isComplemento,
           isRetorno,
           taxas,
+          taxasSeguro,
         ] = [
           cte.dataPagamento,
           cte.contrato,
@@ -158,6 +165,7 @@ export class CteXmlParserService {
           cte.isComplemento,
           cte.isRetorno,
           cte.taxas,
+          getTaxes(cte.ufOrigem, cte.ufDestino),
         ];
         [totalFrete, totalIcms, totalCarga] = [cte.valorFrete, cte.valorIcms, cte.valorCarga];
       }
@@ -287,11 +295,12 @@ export class CteXmlParserService {
             formula: `SUM(L${excelRow})-(M${excelRow}+N${excelRow}+O${excelRow})`,
           };
 
+          const totalDescontoSeguro = (+(taxasSeguro - 0.00015).toFixed(2) + 0.015) / 100;
           worksheet.getCell(`U${excelRow}`).numFmt = currencyFormat;
           worksheet.getCell(`U${excelRow}`).value = isComplemento
             ? 0
             : {
-                formula: `SUM(T${excelRow}*0.00030)*0.0738+(T${excelRow}*0.00030)`,
+                formula: `T${excelRow}*${totalDescontoSeguro}+(T${excelRow}*${totalDescontoSeguro})*0.0738`,
               };
 
           worksheet.getCell(`X${excelRow}`).numFmt = currencyFormat;

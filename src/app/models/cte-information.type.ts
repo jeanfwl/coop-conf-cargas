@@ -1,5 +1,5 @@
 import { Complements } from './complements.type';
-import { EmissionIdentification } from './emission-identification.type';
+import { EmissionIdentification, UF } from './emission-identification.type';
 
 export type Nfe = {
   chave: string;
@@ -60,7 +60,9 @@ export type Cte = {
   produto: Produtos;
   notas: string | number;
   origem: string;
+  ufOrigem: UF;
   destino: string;
+  ufDestino: UF;
   numero: number;
   cheques?: string[];
   dataPagamento?: Date;
