@@ -1,7 +1,6 @@
 import { CteXmlParserService } from './services/cte-xml-parser.service';
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
 
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { OrderListModule } from 'primeng/orderlist';
@@ -9,7 +8,7 @@ import { DragDropModule } from 'primeng/dragdrop';
 import { ButtonModule } from 'primeng/button';
 import { TreeModule, TreeNodeDropEvent } from 'primeng/tree';
 import { ChipsModule } from 'primeng/chips';
-import { MessageService, PrimeNGConfig, TreeDragDropService, TreeNode } from 'primeng/api';
+import { MenuItem, MessageService, PrimeNGConfig, TreeDragDropService, TreeNode } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { Observable, delay, from, mergeMap, toArray } from 'rxjs';
 import { MessageModule } from 'primeng/message';
@@ -17,7 +16,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { Carga, Cte, CteXml, Desconto } from './models/cte-information.type';
 import { X2jOptions, XMLParser } from 'fast-xml-parser';
-import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +25,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { DialogModule } from 'primeng/dialog';
+import { SplitButtonModule } from 'primeng/splitbutton';
 
 const parsingOptions = {
   ignoreAttributes: false,
@@ -43,8 +43,8 @@ const parsingOptions = {
   selector: 'app-root',
   standalone: true,
   imports: [
-    RouterOutlet,
     CommonModule,
+    SplitButtonModule,
     ProgressSpinnerModule,
     FileUploadModule,
     DragDropModule,
@@ -74,9 +74,23 @@ export class AppComponent implements OnInit {
   private readonly cteXmlService = inject(CteXmlParserService);
   private readonly config = inject(PrimeNGConfig);
 
+  opGlobalDate = viewChild.required<OverlayPanel>('opGlobalDate');
+
   filesNode: TreeNode<Cte>[] = [];
   isLoading = false;
   visible = false;
+  globalPaymentDate: null | Date = null;
+  globalDateDialog = false;
+
+  generateItems: MenuItem[] = [
+    {
+      label: 'Data de pagamento geral',
+      icon: 'pi pi-calendar',
+      command: () => {
+        this.globalDateDialog = true;
+      },
+    },
+  ];
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
@@ -324,10 +338,14 @@ export class AppComponent implements OnInit {
       if (file.children?.length! > 0) {
         return {
           ...file.data!,
+          ...(this.globalPaymentDate && { dataPagamento: this.globalPaymentDate }),
           ctes: <Cte[]>file.children?.map((c) => c.data).filter((c) => c !== undefined),
         } as Carga;
       } else {
-        return file.data!;
+        return {
+          ...file.data!,
+          ...(this.globalPaymentDate && { dataPagamento: this.globalPaymentDate }),
+        };
       }
     });
 

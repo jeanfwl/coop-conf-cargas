@@ -28,7 +28,12 @@
         </ng-template>
         <ng-template pTemplate="file"></ng-template>
         <ng-template pTemplate="toolbar">
-          <p-button (onClick)="generateExcel()" label="Gerar Excel" icon="pi pi-file-excel"></p-button>
+          <p-splitButton
+            (onClick)="generateExcel()"
+            label="Gerar Excel"
+            icon="pi pi-file-excel"
+            dropdownIcon="pi pi-cog"
+            [model]="generateItems" />
           <p-button (onClick)="onSaveData()" label="Salvar" icon="pi pi-cloud-download"></p-button>
           <p-button (onClick)="onLoadSavedData()" label="Carregar" icon="pi pi-cloud-upload"></p-button>
         </ng-template>
@@ -264,11 +269,38 @@
   </p-button>
 </div>
 
-<p-dialog [(visible)]="visible" [modal]="true">
+<p-dialog [(visible)]="visible" [modal]="true" [draggable]="false">
   <ng-template pTemplate="headless">
     <div class="p-6 flex flex-column gap-3">
       <span class="p-text-secondary">Aguarde o carregamento do progresso salvo...</span>
       <i class="pi pi-spin pi-spinner text-center text-4xl text-primary"></i>
     </div>
+  </ng-template>
+</p-dialog>
+<p-dialog
+  header="Data de Pagamento"
+  [modal]="true"
+  [draggable]="false"
+  [(visible)]="globalDateDialog"
+  [style]="{ width: '30rem' }">
+  <span class="text-color-secondary block mb-4 text-sm">
+    Defina uma data de pagamento para todos os CT-es.
+  </span>
+  <div class="field">
+    <label class="block" for="pagamento-global">Informe a data</label>
+    <p-calendar
+      id="pagamento-global"
+      appendTo="body"
+      [(ngModel)]="globalPaymentDate"
+      [showButtonBar]="true"
+      [readonlyInput]="true"
+      dateFormat="dd/mm/yy">
+    </p-calendar>
+    <span class="text-400 block text-xs mt-2 px-2">
+      Limpe o campo caso queira utilizar o padrão informado por cada Carga/CT-e
+    </span>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Fechar" [text]="true" severity="secondary" (onClick)="globalDateDialog = false" />
   </ng-template>
 </p-dialog>
