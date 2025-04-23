@@ -90,6 +90,7 @@ export class CteXmlParserService {
         totalCarga = 0;
 
       let dataPagamento,
+        dataEmissao,
         contrato,
         cheques: string[] = [],
         descontos: Desconto[] = [],
@@ -111,6 +112,7 @@ export class CteXmlParserService {
 
         [
           dataPagamento,
+          dataEmissao,
           contrato,
           cheques,
           motorista,
@@ -122,6 +124,7 @@ export class CteXmlParserService {
           taxasSeguro,
         ] = [
           carga.dataPagamento,
+          carga.ctes[0].dataEmissao,
           carga.contrato,
           carga.cheques as string[],
           carga.motorista,
@@ -146,6 +149,7 @@ export class CteXmlParserService {
         ctes = [cte];
         [
           dataPagamento,
+          dataEmissao,
           contrato,
           cheques,
           motorista,
@@ -157,6 +161,7 @@ export class CteXmlParserService {
           taxasSeguro,
         ] = [
           cte.dataPagamento,
+          cte.dataEmissao,
           cte.contrato,
           cte.cheques as string[],
           cte.motorista,
@@ -240,6 +245,8 @@ export class CteXmlParserService {
         valorCargaCell.numFmt = currencyFormat;
 
         worksheet.getCell(`A${excelRow}`).value = motorista;
+        worksheet.getCell(`B${excelRow}`).value = new Date(dataEmissao);
+        worksheet.getCell(`B${excelRow}`).numFmt = 'dd/mmm';
         worksheet.getCell(`C${excelRow}`).numFmt = currencyFormat;
         worksheet.getCell(`R${excelRow}`).numFmt = 'dd/mmm';
 
@@ -372,8 +379,6 @@ export class CteXmlParserService {
 
   generateExcelMergedRows(ctes: Cte[]): (string | number | Date)[][] {
     const cteRows = this.generateExcelRows(ctes);
-
-    // cteRows.forEach((row) => row.splice(row.length - 2, 2));
 
     return cteRows;
   }
